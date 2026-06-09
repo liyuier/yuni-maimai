@@ -1,0 +1,7 @@
+{
+  "connection_id": "yuni-maimai-adapter",
+  "server_url": "ws://175.27.222.170:8095",
+  "token":"W1O.j=X-NavxYa#5",
+  "heartbeat_interval": 30000,
+  "reconnect_interval": 30000
+}

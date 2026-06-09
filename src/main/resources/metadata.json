@@ -1,0 +1,36 @@
+{
+  "module_id": "maimai",
+  "module_name": "麦麦适配器",
+  "plugins": [
+    {
+      "id": "MaiMaiAdapterBooter",
+      "name": "麦麦适配器-连接器",
+      "version": "0.0.1",
+      "description": "对接 MaiBot-Napcat-Adapter ，转发它的消息给 OneBot 客户端",
+      "tips": [],
+      "author": "Yuier me@yuier.com",
+      "dependencies": [],
+      "default_enable": true
+    },
+    {
+      "id": "OneBotMessageForward",
+      "name": "麦麦适配器-转发器",
+      "version": "0.0.1",
+      "description": "转发 OneBot 客户端的消息给 MaiBot-Napcat-Adapter",
+      "tips": [],
+      "author": "Yuier me@yuier.com",
+      "dependencies": [],
+      "default_enable": true
+    },
+    {
+      "id": "OneBotMessageSentForward",
+      "name": "麦麦适配器-自身发送消息转发器",
+      "version": "0.0.1",
+      "description": "maimai 自身发送的消息也转发给 MaiBot-Napcat-Adapter",
+      "tips": [],
+      "author": "Yuier me@yuier.com",
+      "dependencies": [],
+      "default_enable": true
+    }
+  ]
+}

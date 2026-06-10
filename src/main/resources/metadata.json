@@ -1,0 +1,26 @@
+{
+  "module_id": "maimai",
+  "module_name": "麦麦适配器",
+  "plugins": [
+    {
+      "id": "maimai.MaiMaiAdapterBooter",
+      "name": "maimai-连接器",
+      "version": "0.0.1",
+      "description": "启动 WebSocket 服务器，接受 MaiBot-Napcat-Adapter 连接，实现 OneBot 协议核心动作",
+      "tips": ["NapCat ←→ Yuni ←→ maimai 双向中转"],
+      "author": "Yuier me@yuier.com",
+      "dependencies": [],
+      "default_enable": true
+    },
+    {
+      "id": "maimai.OneBotMessageForward",
+      "name": "maimai-消息转发",
+      "version": "0.0.1",
+      "description": "将 QQ 群聊/私聊消息（非命令）转发给 maimai",
+      "tips": ["不转发命令消息，maimai 专注于群聊自然对话"],
+      "author": "Yuier me@yuier.com",
+      "dependencies": [],
+      "default_enable": true
+    }
+  ]
+}

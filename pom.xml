@@ -25,6 +25,13 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <!-- WebSocket 服务器 -->
+        <dependency>
+            <groupId>org.java-websocket</groupId>
+            <artifactId>Java-WebSocket</artifactId>
+            <version>1.5.7</version>
+        </dependency>
+
     </dependencies>
 
     <build>

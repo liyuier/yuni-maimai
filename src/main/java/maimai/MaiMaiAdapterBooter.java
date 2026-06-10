@@ -34,6 +34,7 @@ public class MaiMaiAdapterBooter extends ImmediatePlugin {
             log.info("[MaiMai] 启动服务器，端口: {}", port);
 
             wsServer = new MaiMaiWsServer(port);
+            wsServer.setHeartbeatIntervalMs(config.getHeartbeatIntervalMs());
             wsServer.start();
 
             // 注册为 Spring Bean 供 OneBotMessageForward 获取
@@ -59,12 +60,8 @@ public class MaiMaiAdapterBooter extends ImmediatePlugin {
         }
 
         if (wsServer != null) {
-            try {
-                wsServer.stop(1000);
-                log.info("[MaiMai] 服务器已停止");
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            wsServer.shutdown();
+            log.info("[MaiMai] 服务器已停止");
         }
     }
 

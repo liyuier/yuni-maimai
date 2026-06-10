@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 麦麦 WebSocket 服务器，实现 OneBot v11 协议核心动作子集。
@@ -30,10 +33,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MaiMaiWsServer extends WebSocketServer {
 
     private final Set<WebSocket> clients = ConcurrentHashMap.newKeySet();
+    private final ScheduledExecutorService heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
+    private volatile boolean heartbeatRunning = false;
+
+    /** 心跳间隔，毫秒 */
+    private long heartbeatIntervalMs = 30000;
 
     public MaiMaiWsServer(int port) {
         super(new InetSocketAddress(port));
         setReuseAddr(true);
+    }
+
+    public void setHeartbeatIntervalMs(long heartbeatIntervalMs) {
+        this.heartbeatIntervalMs = heartbeatIntervalMs;
     }
 
     // ==================== 连接生命周期 ====================
@@ -43,6 +55,7 @@ public class MaiMaiWsServer extends WebSocketServer {
         clients.add(conn);
         log.info("[MaiMaiWs] maimai 已连接: {} (当前 {} 个客户端)", conn.getRemoteSocketAddress(), clients.size());
         sendLifecycleEvent(conn);
+        startHeartbeat();
     }
 
     @Override
@@ -50,6 +63,7 @@ public class MaiMaiWsServer extends WebSocketServer {
         clients.remove(conn);
         log.info("[MaiMaiWs] maimai 已断开: {} code={} reason={} (剩余 {} 个客户端)",
                 conn.getRemoteSocketAddress(), code, reason, clients.size());
+        if (clients.isEmpty()) stopHeartbeat();
     }
 
     @Override
@@ -229,13 +243,56 @@ public class MaiMaiWsServer extends WebSocketServer {
     }
 
     private void sendLifecycleEvent(WebSocket conn) {
+        Map<String, Object> event = buildMetaEvent("lifecycle", Map.of("sub_type", "connect"));
+        conn.send(PluginUtils.serialize(event));
+    }
+
+    // ==================== 心跳 ====================
+
+    private void startHeartbeat() {
+        if (heartbeatRunning) return;
+        heartbeatRunning = true;
+        heartbeatExecutor.scheduleAtFixedRate(
+                this::sendHeartbeat,
+                heartbeatIntervalMs,
+                heartbeatIntervalMs,
+                TimeUnit.MILLISECONDS);
+        log.info("[MaiMaiWs] 心跳已启动，间隔 {}ms", heartbeatIntervalMs);
+    }
+
+    private void stopHeartbeat() {
+        heartbeatRunning = false;
+    }
+
+    /** 关闭服务器并清理所有资源。 */
+    public void shutdown() {
+        heartbeatExecutor.shutdown();
+        try {
+            stop(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void sendHeartbeat() {
+        if (clients.isEmpty()) return;
+        Map<String, Object> event = buildMetaEvent("heartbeat", Map.of(
+                "status", Map.of("online", true, "good", true),
+                "interval", heartbeatIntervalMs));
+        String json = PluginUtils.serialize(event);
+        for (WebSocket c : clients) {
+            if (c.isOpen()) c.send(json);
+        }
+    }
+
+    private Map<String, Object> buildMetaEvent(String metaEventType, Map<String, Object> extra) {
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("post_type", "meta_event");
-        event.put("meta_event_type", "lifecycle");
-        event.put("sub_type", "connect");
+        event.put("meta_event_type", metaEventType);
         event.put("self_id", PluginUtils.getBotId());
         event.put("time", System.currentTimeMillis() / 1000);
-        conn.send(PluginUtils.serialize(event));
+        event.putAll(extra);
+        return event;
     }
 
     private YuniBot bot() { return PluginUtils.getYuniBot(); }
